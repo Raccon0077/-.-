@@ -1,0 +1,170 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits import mplot3d
+
+def generate_data():
+    """Генерация данных с использованием linspace"""
+    print("Генерация данных...")
+    
+    # Генерируем x1 и x2 с использованием linspace
+    x1 = np.linspace(-10, 10, 500)
+    x2 = np.linspace(-8, 8, 500)
+    
+    # Создаем DataFrame
+    df = pd.DataFrame({
+        'x1': x1,
+        'x2': x2
+    })
+    
+    # Вычисляем y по функции: y = -2x₁² + x₁x₂ + 4x₂² + 5
+    df['y'] = -2*df['x1']**2 + df['x1']*df['x2'] + 4*df['x2']**2 + 5
+    
+    return df
+
+def save_to_csv(df, filename):
+    """Сохранение DataFrame в CSV"""
+    df.to_csv(filename, index=False)
+    print(f"Файл '{filename}' создан успешно!")
+
+def print_statistics(df):
+    """Вывод статистики по столбцам"""
+    print("\nСтатистика по столбцам:")
+    print("-" * 40)
+    for col in df.columns:
+        print(f"{col}:")
+        print(f"  Среднее = {df[col].mean():.4f}")
+        print(f"  Минимум = {df[col].min():.4f}")
+        print(f"  Максимум = {df[col].max():.4f}")
+        print()
+
+def plot_2d_graphs(df):
+    """Построение 2D графиков"""
+    print("Построение 2D графиков...")
+    
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+    
+    # График 1: y от x1 (x2 = константа)
+    x2_const = df['x2'].mean()
+    y_vs_x1 = -2*df['x1']**2 + df['x1']*x2_const + 4*x2_const**2 + 5
+    
+    ax1.plot(df['x1'], y_vs_x1, 'b-', linewidth=2, label=f'x2 = {x2_const:.2f}')
+    ax1.set_xlabel('x1')
+    ax1.set_ylabel('y')
+    ax1.set_title('График y от x1 (x2 = константа)')
+    ax1.grid(True, alpha=0.3)
+    ax1.legend()
+    
+    # График 2: y от x2 (x1 = константа) с точками
+    x1_const = df['x1'].mean()
+    y_vs_x2 = -2*x1_const**2 + x1_const*df['x2'] + 4*df['x2']**2 + 5
+    
+    ax2.scatter(df['x2'], y_vs_x2, c='red', s=10, alpha=0.6, label='Точки данных')
+    ax2.plot(df['x2'], y_vs_x2, 'r-', alpha=0.7, linewidth=2, label=f'x1 = {x1_const:.2f}')
+    ax2.set_xlabel('x2')
+    ax2.set_ylabel('y')
+    ax2.set_title('График y от x2 (x1 = константа)')
+    ax2.grid(True, alpha=0.3)
+    ax2.legend()
+    
+    plt.tight_layout()
+    plt.savefig('2d_graphs.png', dpi=300, bbox_inches='tight')
+    plt.show()
+
+def filter_data(df):
+    """Фильтрация данных по условию"""
+    print("Фильтрация данных...")
+    
+    mean_x1 = df['x1'].mean()
+    mean_x2 = df['x2'].mean()
+    
+    # Условие: x1 < среднее(x1) ИЛИ x2 < среднее(x2)
+    filtered_df = df[(df['x1'] < mean_x1) | (df['x2'] < mean_x2)]
+    
+    print(f"Условие фильтрации: x1 < {mean_x1:.4f} ИЛИ x2 < {mean_x2:.4f}")
+    print(f"Исходные данные: {len(df)} строк")
+    print(f"Отфильтрованные данные: {len(filtered_df)} строк")
+    print(f"Процент отфильтрованных данных: {len(filtered_df)/len(df)*100:.1f}%")
+    
+    return filtered_df
+
+def plot_3d_graph(df):
+    """Построение 3D графика"""
+    print("Построение 3D графика...")
+    
+    fig = plt.figure(figsize=(14, 10))
+    ax = plt.axes(projection='3d')
+    
+    # Создаем сетку для 3D графика
+    X1 = np.linspace(-10, 10, 50)
+    X2 = np.linspace(-8, 8, 50)
+    X1, X2 = np.meshgrid(X1, X2)
+    Y = -2*X1**2 + X1*X2 + 4*X2**2 + 5
+    
+    # Рисуем поверхность
+    surf = ax.plot_surface(X1, X2, Y, cmap='viridis', alpha=0.9, 
+                          linewidth=0, antialiased=True, rstride=1, cstride=1)
+    
+    # Добавляем контуры
+    ax.contour(X1, X2, Y, zdir='z', offset=Y.min(), cmap='viridis', alpha=0.5)
+    
+    # Настройки графика
+    ax.set_xlabel('x1', fontsize=12, labelpad=10)
+    ax.set_ylabel('x2', fontsize=12, labelpad=10)
+    ax.set_zlabel('y', fontsize=12, labelpad=10)
+    ax.set_title('3D график функции: y = -2x₁² + x₁x₂ + 4x₂² + 5', fontsize=14, pad=20)
+    
+    # Добавляем цветовую шкалу
+    cbar = fig.colorbar(surf, ax=ax, shrink=0.5, aspect=20, pad=0.1)
+    cbar.set_label('Значение y', rotation=270, labelpad=15)
+    
+    # Устанавливаем угол обзора
+    ax.view_init(elev=30, azim=45)
+    
+    plt.tight_layout()
+    plt.savefig('3d_graph.png', dpi=300, bbox_inches='tight')
+    plt.show()
+
+def main():
+    """Основная функция"""
+    print("=" * 60)
+    print("ОБРАБОТКА ДАННЫХ И ВИЗУАЛИЗАЦИЯ")
+    print("=" * 60)
+    print("Функция: y = -2x₁² + x₁x₂ + 4x₂² + 5")
+    print("=" * 60)
+    
+    try:
+        # 1. Генерация данных
+        df = generate_data()
+        
+        # 2. Сохранение в CSV
+        save_to_csv(df, 'generated_data.csv')
+        
+        # 3. Вывод статистики
+        print_statistics(df)
+        
+        # 4. Построение 2D графиков
+        plot_2d_graphs(df)
+        
+        # 5. Фильтрация и сохранение
+        filtered_df = filter_data(df)
+        save_to_csv(filtered_df, 'filtered_data.csv')
+        
+        # 6. Построение 3D графика
+        plot_3d_graph(df)
+        
+        print("\n" + "=" * 60)
+        print("ПРОГРАММА УСПЕШНО ВЫПОЛНЕНА!")
+        print("=" * 60)
+        print("Созданные файлы:")
+        print("  - generated_data.csv (исходные данные)")
+        print("  - filtered_data.csv (отфильтрованные данные)")
+        print("  - 2d_graphs.png (2D графики)")
+        print("  - 3d_graph.png (3D график)")
+        print("=" * 60)
+        
+    except Exception as e:
+        print(f"Ошибка: {e}")
+
+if __name__ == "__main__":
+    main()
